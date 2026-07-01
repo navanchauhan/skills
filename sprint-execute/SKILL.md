@@ -1,4 +1,3 @@
-
 ---
 name: sprint-execute
 description: Execute planned sprints from .ai/sprints in the current session. Sister skill to sprint-plan. Use when asked to start, continue, execute, implement, finish a sprint, keep executing sprints, drain the sprint queue, or finish all remaining sprints.

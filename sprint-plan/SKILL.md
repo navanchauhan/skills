@@ -1,4 +1,3 @@
-
 ---
 name: sprint-plan
 description: Create sprint plan by orchestrating subagents and external coding agents
