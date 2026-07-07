@@ -33,6 +33,7 @@ Numbers map to the stage sections below. Working files use `SPRINT_<NNN>_*` (und
 .ai/sprint-state/INTENT_DELIVERY.md
 .ai/sprint-state/INTENT_SYNTHESIS.md
 .ai/sprint-state/INTERVIEW_ASSUMPTIONS.md    (if needed)
+.ai/sprint-state/STAGE_LEDGER.md
 .ai/sprint-state/final-sprint.md
 .ai/sprints/SPRINT-<NNN>.md
 ```
@@ -62,6 +63,8 @@ If maintained, `queue.tsv` is append/update metadata only:
 
 The queue status may mirror `planning`, `planned`, `implementing`, `implemented`, or `blocked`. `sprint-plan` writes the `planned` row at persist time; `sprint-execute` updates the same row for `implementing`, `implemented`, and `blocked` transitions (see sprint-execute Stage 7). Missing `queue.tsv` entries do not invalidate sprint files.
 
+`STAGE_LEDGER.md` records each stage's required artifacts, status, retry count, and whether the orchestrator is allowed to advance. The orchestrator must update it after every stage. Stage 8 merge and Stage 10 persist are forbidden unless Stage 4, 5, and 6 are either complete or have explicit failed-after-retry records.
+
 ## Agent Availability
 
 Check each command individually and record results in `.ai/coding-agents.md`:
@@ -76,7 +79,7 @@ Currently we support Claude Code, Codex, and Antigravity-CLI only.
 
 ## Stage 1: Create Sprint State
 
-Inspect all known sprint identifiers to determine the next sprint ID: `.ai/sprints/SPRINT-*.md`, `.ai/sprints/SPRINT_<NNN>_*` drafts, `.ai/sprint-state/current.env`, `.ai/sprint-state/history.log`, `.ai/sprint-state/queue.tsv` if present, `.ai/sprint-execution/current.env`, and `.ai/sprint-execution/progress.log` if present. Choose one higher than the maximum ID found; never reuse an ID.
+Inspect all known sprint identifiers to determine the next sprint ID: `.ai/sprints/SPRINT-*.md`, `.ai/sprints/SPRINT_<NNN>_*` drafts, `.ai/sprint-state/current.env`, `.ai/sprint-state/history.log`, `.ai/sprint-state/queue.tsv` if present, `.ai/sprint-execution/current.env`, and `.ai/sprint-execution/progress.log` if present. Only parse sprint IDs from explicit `SPRINT-<NNN>`, `SPRINT_<NNN>`, `SPRINT_ID=<NNN>`, or tab-delimited history/queue sprint ID fields; do not treat arbitrary three-digit numbers as sprint IDs. Choose one higher than the maximum ID found; never reuse an ID.
 
 Write `current.env` for the new planning run, overwriting any prior pointer contents, and append a `planning` event to `history.log`. This overwrite is expected even if another sprint is mid-execution (see the note on `current.env` above — it tracks only the latest planning action, not overall queue state). If `.ai/sprint-execution/current.env` shows another sprint is `implementing`, leave execution state untouched. Planning a new sprint while another sprint executes is valid; the existing sprint remains in the queue/execution state and the new sprint becomes an additional queued item when persisted.
 
@@ -122,6 +125,11 @@ Artifact pattern:
 .ai/sprints/SPRINT_<NNN>_<CRITIC>_CRITIQUE_<AUTHOR>.md
 ```
 
+Stage 5 completion gate:
+- For every successful draft author, every other available agent must produce a critique artifact, unless that critic failed after one retry.
+- If a critique lane fails after retry, write `.ai/sprints/SPRINT_<NNN>_<CRITIC>_CRITIQUE_<AUTHOR>_FAILED.md` with command, exit status, timeout/retry evidence, and impact.
+- Do not advance to Stage 6 until all expected critique artifacts or failed-after-retry records exist and are non-empty.
+
 Use the Stage 4 wait policy for every external critique invocation. Do not create orchestrator fallback critique files until the relevant agent has exited/failed or exceeded the wait budget and one retry has also failed.
 
 ## Stage 6: External Critique Reviews
@@ -134,6 +142,11 @@ Artifact pattern:
 ```
 e.g. `SPRINT_<NNN>_CODEX_REVIEW_CLAUDE_CRITIQUE_ANTIGRAVITY.md` — Codex reviewing Claude's critique of Antigravity's draft.
 
+Stage 6 completion gate:
+- For every critique artifact, every available reviewer except the critique author must produce a review artifact, unless that reviewer failed after one retry.
+- If a review lane fails after retry, write `.ai/sprints/SPRINT_<NNN>_<REVIEWER>_REVIEW_<CRITIQUE_ARTIFACT>_FAILED.md` with command, exit status, timeout/retry evidence, and impact.
+- Do not advance to Stage 8 until all expected review artifacts or failed-after-retry records exist and are non-empty.
+
 Verify each file as in Stage 4, using the same wait policy. Do not create orchestrator fallback review files until the relevant agent has exited/failed or exceeded the wait budget and one retry has also failed.
 
 ## Stage 7: Interview (skip if no ambiguity)
@@ -142,13 +155,35 @@ If material ambiguity remains, ask the user concise questions — only those tha
 
 ## Stage 8: Orchestrator Merge
 
+Before merging, verify the critique coverage matrix. The merge must name:
+- drafts included
+- critiques included
+- critique reviews included
+- failed lanes and why they were safe to proceed without
+- material critique points accepted/rejected
+
 Read all orientation, intent, draft, critique, critique-review, and interview artifacts. Produce `.ai/sprint-state/final-sprint.md`. Keep only decisions that survived critique. Resolve conflicts explicitly.
 
 ## Stage 9: Quality Gate
 
 The final plan must include: concrete objective and non-goals, current-state evidence, agent availability summary, scope, phased implementation steps, touched files/modules, validation commands, risk register, fallback plan, definition of done, and closeout checklist. Revise before persisting if any are missing.
 
+Quality gate must fail if:
+- any available external draft is missing without a failed-after-retry artifact
+- any required cross-critique is missing without a failed-after-retry artifact
+- any required critique review is missing without a failed-after-retry artifact
+- final sprint does not summarize how critiques changed the plan
+
 ## Stage 10: Persist
+
+Before persisting, run an artifact coverage check and print/write the result:
+- expected drafts
+- expected critiques
+- expected critique reviews
+- actual artifacts
+- failed-after-retry artifacts
+
+Persistence is forbidden if this check fails.
 
 Write the full contents of `.ai/sprint-state/final-sprint.md` to `.ai/sprints/SPRINT-<NNN>.md`. The persisted sprint file is the immutable historical sprint artifact and must be self-contained; do not make it a pointer, symlink, stub, or "see final-sprint.md" wrapper. `final-sprint.md` is only the current merge/staging output and may change in later planning work, so it cannot be the canonical record for queued or historical sprints.
 
