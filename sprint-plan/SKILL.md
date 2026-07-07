@@ -94,7 +94,7 @@ Each available external agent produces an independent draft. Prompts must name t
 
 Invocations:
 ```sh
-claude --dangerously-skip-permissions --model opus --print "$prompt"
+claude --dangerously-skip-permissions --model fable --print "$prompt" # fallback to opus if unavailable
 codex exec --yolo "$prompt"
 agy --dangerously-skip-permissions --print "$prompt"
 ```
