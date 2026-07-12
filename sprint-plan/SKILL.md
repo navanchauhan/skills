@@ -1,6 +1,6 @@
 ---
 name: sprint-plan
-description: Create sprint plan by orchestrating subagents and external coding agents
+description: Create sprint plan by orchestrating subagents and external coding agents. Only use the skill when asked to create a sprint plan.
 ---
 
 # Sprint Plan
