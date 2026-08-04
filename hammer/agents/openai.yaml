@@ -1,0 +1,3 @@
+interface:
+  display_name: "Hammer"
+  short_description: "Audit-first orchestration with task-specific lenses"
