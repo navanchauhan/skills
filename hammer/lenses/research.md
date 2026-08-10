@@ -8,6 +8,7 @@
 - Source and evidence map.
 - Experiments or observations that discriminate among hypotheses.
 - Tracked uncertainty, confounders, and negative results.
+- Under a `fact-constrained` policy: retrieve only specified facts, primary documentation, and named results; never search for the solution itself or its open/solved status.
 
 ## Prefer
 - High-information experiments.

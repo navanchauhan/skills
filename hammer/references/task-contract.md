@@ -4,7 +4,7 @@ Use internally before broad orchestration. Append the contract fields declared b
 
 ```yaml
 objective: ""
-deliverable: ""
+deliverable: ""             # include form: language/runtime, self-contained vs host-dependent, interaction model
 delivery_floor: ""          # smallest result the user could adopt as the requested outcome
 primary_lens: ""
 constraint_lenses: []
@@ -17,7 +17,7 @@ constraints: []
 
 adaptation_boundary:
   autonomous: []            # sequencing, tactics, internal milestones
-  requires_approval: []     # objective, acceptance, preservation, cost, safety, external effects
+  requires_approval: []     # objective, acceptance, preservation, deliverable form or runtime dependencies, cost, safety, external effects
 
 validation_requirements: []
 explicit_assumptions: []

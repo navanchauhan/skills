@@ -27,7 +27,7 @@ Use Hammer to turn an underspecified difficult task into an evidence-backed cont
      ```text
      Interpretation: [requested outcome in one or two sentences]
      Delivery floor: [smallest result the user could adopt as the requested outcome]
-     Preserve: [behavior, interfaces, or guarantees that must not change]
+     Preserve: [user-stated or repo-enforced behavior, interfaces, or guarantees that must not change — never agent-assumed safety chrome such as warning copy, disclosures, or banners]
      Autonomous: [what will be adapted without further approval]
      Needs approval: [objective, acceptance, preservation, cost, safety, external effects]
      Questions: [contract-changing unknowns only, or none]
@@ -39,14 +39,16 @@ Use Hammer to turn an underspecified difficult task into an evidence-backed cont
    - Read `references/task-contract.md` and instantiate it internally.
    - Keep the contract as the stable orchestration state shared across phases and agents.
    - Amend it only when new evidence requires a change. Record the evidence and invalidate incompatible approaches. Never change it silently.
-   - Sequencing, tactics, and internal milestones adapt freely. Crossing the objective, acceptance criteria, preservation obligations, cost, safety, or external-effect boundary requires renewed user approval recorded as an amendment.
+   - Sequencing, tactics, and internal milestones adapt freely. Crossing the objective, acceptance criteria, preservation obligations, deliverable form (artifact type, language/runtime, host dependencies, interaction model), cost, safety, or external-effect boundary requires renewed user approval recorded as an amendment.
    - The delivery floor is the smallest result the user could adopt as the requested outcome, never the smallest convenient implementation slice. A scaffold, isolated layer, placeholder, or walking skeleton is not a candidate unless explicitly requested.
-   - When a run may outlive the session, persist the contract and approach registry to one scratch file (for example `.ai/hammer-state.md`) and refresh it at every amendment and synthesis round. A fresh session resumes from that file plus repository inspection, never from recollection of prior prose.
+   - When a run may outlive the session or its context window (compaction), persist the contract, approach registry, and defect ledger to one state file and refresh it at every amendment and synthesis round. Record user-issued operational constraints (required tools, forbidden operations, cost limits) there as preservation obligations. A fresh session or post-compaction continuation resumes from that file plus repository inspection, never from recollection of prior prose.
+   - In a git repository, keep state on an orphan branch checked out as a hidden worktree so state history never touches product history: `git worktree add --orphan -b hammer/state .hammer/`, exclude it via `echo '.hammer/' >> .git/info/exclude`, write state to `.hammer/state.md`, and commit on the orphan branch at each refresh. Product commits and state commits never mix. Outside git, fall back to `.ai/hammer-state.md`.
+   - One state branch serves every product branch: for multiple runs, give each run its own file `.hammer/runs/<slug>.md` keyed by product branch or task slug, name the run in each state commit, and keep terminal run files as minable history. Never run two concurrent Hammer runs on one product branch.
 
 5. **Select lenses**
    - Choose exactly one primary lens. The primary lens defines what a good solution means and controls the workflow.
    - Add zero or more constraint lenses. They add mandatory checks without replacing the primary lens.
-   - Load only the selected files from `lenses/`.
+   - Load only the selected files from `lenses/`. If skill, lens, or reference content is already in context, do not re-read it from disk; load each file at most once per contract.
    - Append the primary lens's contract fields to the task contract.
 
    Primary lenses:
@@ -79,15 +81,18 @@ Use Hammer to turn an underspecified difficult task into an evidence-backed cont
    | Standalone audit | validate |
 
    - A spike is a bounded, disposable experiment that retires one material unknown. It never becomes production work by accident.
+   - Competitive or resource-bound acceptance (state-of-the-art, beat-X, fixed hardware or budget) is a feasibility unknown until evidence affirms it; an instruction to assume success does not retire it. When a spike cannot affirm feasibility, renegotiate the delivery floor with the user before implementation.
    - Every execution cadence ends with adversarial validation of the integrated result.
 
 7. **Run lens-driven orchestration**
    - Begin with genuinely different approach families when multiple mechanisms are plausible.
    - Preserve independence during early exploration. Do not reveal the favored route to most workers.
+   - Brief each worker with a minimal contract slice — objective, invariants, allowed paths, guard command — never a fork of the orchestrator's history. Full-history forks are forbidden for validators, who must not inherit the favored route or prior verdicts, and elsewhere require recorded justification.
    - Maintain an approach registry grouped by underlying mechanism, not wording.
    - Require concrete artifacts: patches, tests, proofs, lemmas, counterexamples, traces, benchmarks, experiments, or precise gaps.
    - Mark routes blocked when their hardest unresolved dependency is equivalent in strength to the original task. Reopen only for a materially new mechanism.
    - Allocate effort by information gain, unresolved risk, and novelty rather than fixed worker counts.
+   - Prefer one long or event-driven wait over chains of short polls; polling turns permanently inflate the transcript that every worker brief inherits.
    - Split concurrent writing work by independently verifiable responsibility, not file count. Brief each writing worker with the responsibility map, allowed paths, dependency direction, and the exact check or lint command that guards them.
    - Missing tools, failed approaches, and failing validation are work, not blocks.
 
@@ -95,23 +100,20 @@ Use Hammer to turn an underspecified difficult task into an evidence-backed cont
    - Read `references/audit-checklists.md` and combine the relevant sections with the selected lens checks.
    - Separate implementation from validation when practical.
    - Validate every candidate against the task contract, not merely against modified tests or the candidate author's interpretation.
-   - Audit the semantic delta: intended changes, preserved behavior, unexplained changes, migrations, and rollback.
+   - When the deliverable has a user-facing surface, validate on that surface as the user would — real browser, simulator, device, or a fresh shell running the exact handoff commands. Green suites, health endpoints, and logs are not evidence for surface behavior.
+   - Audit the semantic delta: intended changes, preserved behavior, unexplained changes, migrations, rollback, and new runtime prerequisites (config, secrets, keys, service wiring) the change introduces.
    - After integration and after material repairs, simplify: remove duplicate writers, dead branches, stale compatibility paths, and unnecessary indirection, then rerun affected validation.
    - A repair is not closed until its regression passes, affected evidence is rerun, and the relevant adversarial check re-enters. A repair that changes a mechanism reopens simplification and validation.
+   - Keep validation proportionate: never redesign a validation protocol or harness twice without executing it against the primary artifact. If consecutive rounds harden verification while the delivery-floor artifact does not advance, run the existing checks or surface a pivot.
 
 9. **Complete truthfully**
    - Declare completion only when the required artifact exists, the contract is satisfied, critical dependencies are resolved, and independent validation reproduces the result.
+   - Never end a turn empty: end with verified status plus the next action, or an explicit awaiting-user statement. When a gate blocks an unattended run, record it in the state file with its exact resume command; never pause silently.
    - If the budget is exhausted, return the strongest verified result, exact remaining gap, evidence, invalidated approaches, and highest-value next steps. Never fabricate completion.
 
 ## Evidence Policy
 
-Record one policy in the contract. An explicit user policy wins.
-
-- `open-world` — default for software and product work. External documentation, prior art, libraries, mechanisms, and ecosystem constraints are immediately usable.
-- `fact-constrained` — retrieve only specified facts, primary documentation, definitions, or named results. Never search for a solution to the exact task or for its open/solved status.
-- `closed-world-first` — default when acceptance requires independent originality. Perform meaningful independent work without retrieval, freeze an independent route or synthesis checkpoint, then review literature for prior art, counterexamples, novelty, and repair. Early failure never opens access.
-
-Label materially retrieval-shaped routes `web-informed` and verify their novelty against literature. Retrieval abstinence neither removes latent knowledge nor proves originality.
+Record one policy in the contract. An explicit user policy wins. Default is `open-world`: external documentation, prior art, libraries, mechanisms, and ecosystem constraints are immediately usable. When acceptance requires independent originality or restricted retrieval, use `closed-world-first` or `fact-constrained` as defined in the mathematics and research lenses.
 
 ## Internal Contract Usage
 
@@ -136,6 +138,8 @@ Track at least:
 - tested cases and counterevidence;
 - state: active, blocked, disproved, merged, or complete;
 - exact reopen condition.
+
+Adversarial findings enter the same registry: mechanism, evidence location, regression, and state. Each audit wave diffs against the registry and reports only new or reopened findings; re-finding a defect registered as closed is a repair-closure failure, not a new finding.
 
 Reject status reports and vague optimism. Require falsifiable artifacts and explicit distinctions among established facts, assumptions, hypotheses, and observations.
 

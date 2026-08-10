@@ -9,7 +9,7 @@
 - Counterexample search for proposed sublemmas.
 - Edge, boundary, degenerate, disconnected, multiplicity, and representation cases.
 - Clear separation of proof, heuristic, computation, and citation.
-- `closed-world-first` evidence policy when originality is claimed: independent derivation before literature review, retrieval-shaped routes labeled `web-informed`.
+- `closed-world-first` evidence policy when originality is claimed: independent derivation first, freeze an independent route, then review literature for prior art and counterexamples. Retrieval-shaped routes are labeled `web-informed`; early failure never opens access.
 
 ## Reject
 - Reductions ending in an unproved claim equivalent in strength to the original task.
