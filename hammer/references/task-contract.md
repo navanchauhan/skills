@@ -13,6 +13,7 @@ evidence_policy: ""         # open-world | fact-constrained | closed-world-first
 
 success_criteria: []
 non_goals: []
+insufficient_outcomes: []   # in-scope results that look like progress but do not count: mockup, placeholder, unexercised dependency
 constraints: []
 
 adaptation_boundary:
