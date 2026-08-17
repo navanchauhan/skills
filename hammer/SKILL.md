@@ -48,7 +48,7 @@ Use Hammer to turn an underspecified difficult task into an evidence-backed cont
    - Amend it only when new evidence requires a change. Record the evidence and invalidate incompatible approaches. Never change it silently.
    - Sequencing, tactics, and internal milestones adapt freely. Crossing the objective, acceptance criteria, preservation obligations, deliverable form (artifact type, language/runtime, host dependencies, interaction model), cost, safety, or external-effect boundary requires renewed user approval recorded as an amendment.
    - The delivery floor is the smallest result the user could adopt as the requested outcome, never the smallest convenient implementation slice. A scaffold, isolated layer, placeholder, or walking skeleton is not a candidate unless explicitly requested.
-   - When a run may outlive the session or its context window (compaction), persist the contract, approach registry, and defect ledger to one state file and refresh it at every amendment and synthesis round. Record user-issued operational constraints (required tools, forbidden operations, cost limits) there as preservation obligations. A fresh session or post-compaction continuation resumes from that file plus repository inspection, never from recollection of prior prose.
+   - When a run may outlive the session or its context window (compaction) — assume it may whenever the work looks longer than thirty minutes or one context window — persist the contract, approach registry, and defect ledger to one state file and refresh it at every amendment and synthesis round. Record user-issued operational constraints (required tools, forbidden operations, cost limits) there as preservation obligations. A fresh session or post-compaction continuation resumes from that file plus repository inspection, never from recollection of prior prose.
    - In a git repository, keep state on an orphan branch checked out as a hidden worktree so state history never touches product history: `git worktree add --orphan -b hammer/state .hammer/`, exclude it via `echo '.hammer/' >> .git/info/exclude`, write state to `.hammer/state.md`, and commit on the orphan branch at each refresh. Product commits and state commits never mix. Outside git, fall back to `.ai/hammer-state.md`.
    - One state branch serves every product branch: for multiple runs, give each run its own file `.hammer/runs/<slug>.md` keyed by product branch or task slug, name the run in each state commit, and keep terminal run files as minable history. Never run two concurrent Hammer runs on one product branch.
 
@@ -64,6 +64,7 @@ Use Hammer to turn an underspecified difficult task into an evidence-backed cont
    - `lenses/bug-fix.md`
    - `lenses/cleanup.md`
    - `lenses/migration.md`
+   - `lenses/semantic-port.md`
    - `lenses/mathematics.md`
    - `lenses/research.md`
    - `lenses/system-design.md`
@@ -118,6 +119,7 @@ Use Hammer to turn an underspecified difficult task into an evidence-backed cont
 9. **Complete truthfully**
    - Declare completion only when the required artifact exists, the contract is satisfied, critical dependencies are resolved, and independent validation reproduces the result.
    - Never end a turn empty: end with verified status plus the next action, or an explicit awaiting-user statement. When a gate blocks an unattended run, record it in the state file with its exact resume command; never pause silently.
+   - Stop or hand off every worker, watcher, background process, and scratch environment the run started; report anything deliberately left running.
    - If the budget is exhausted, return the strongest verified result, exact remaining gap, evidence, invalidated approaches, and highest-value next steps. Never fabricate completion.
    - The completion report states: the deliverable, exact run or reproduce commands, validation evidence by surface, per-criterion status, genuine remaining limitations, and confirmation of preserved behavior.
 
